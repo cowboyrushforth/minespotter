@@ -1,31 +1,36 @@
 /* Live Sweeper 0.0.1 */
 
-// requires and setup
-var Settings = {
-  pieceSize: 48
-};
+// Libs
 var Connect  = require('connect');
 var DNode    = require('dnode');
 var Mongoose = require('mongoose');
-var Schema = Mongoose.Schema, ObjectId = Schema.ObjectId;
 var underscore = require('underscore');
+
+// Static Setup
+var Schema = Mongoose.Schema;
+var ObjectId = Schema.ObjectId;
 var fieldPlayers = {};
 var playerFields = {};
+var Settings = {
+  pieceSize: 72 
+};
 
-// connect to mongo
+// Connect to Mongo
 Mongoose.connect('mongodb://localhost/livemine_dev');
-
-  // create Server
-var server = Connect.createServer(
-    // js lint can suck it, have no choice here.
-    Connect.static(__dirname + '/pub')
-);
-
 //Fix $near with array.
 Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$near = function (val) {
   return this.cast(val);
 };
+//Fix $within
+Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$within = function (val) {
+  return val;
+};
 
+// Create Server
+var server = Connect.createServer(
+    // js lint can suck it, have no choice here.
+    Connect.static(__dirname + '/pub')
+);
 
 // setup Mine Model
 var MineSchema = new Schema({
@@ -51,10 +56,18 @@ DNode(function (client, conn) {
     var needed_pieces = Math.ceil(needed_pieces_w*needed_pieces_h);
     needed_pieces = needed_pieces + (needed_pieces_w+needed_pieces_h);
 
-    console.log('readAll called for x: '+x+' y: '+y+' sw: '+screenWidth+' sh: '+screenHeight+' coll: '+collection+' needed pieces: '+needed_pieces+' needed_pieces_w: '+needed_pieces_w);
+    // figure out lower left and upper right corners. do a mongo-spatial-bounding-box
+    var lower_left = [parseInt(y,10),parseInt(x,10)];
+    var upper_right = [Math.ceil((y+needed_pieces_w)),Math.ceil((x+needed_pieces_h))];
+
+    console.log('readMines called for x: '+x+' y: '+y+' sw: '+screenWidth+' sh: '+screenHeight+' coll: '+collection+' needed pieces: '+needed_pieces+' needed_pieces_w: '+needed_pieces_w);
+    console.log('lower_left: '+lower_left+' upper_right: '+upper_right);
 
     //get documents for this collection
-    MineModel.find({loc: {$near: [parseInt(y,10),parseInt(x,10)]}},[],{limit: needed_pieces}, function(err, docs) {
+    //MineModel.find({loc: {$near: [parseInt(y,10),parseInt(x,10)]}},[],{limit: needed_pieces}, function(err, docs) {
+    //> box = [[40.73083, -73.99756], [40.741404,  -73.988135]]
+    //> db.places.find({"loc" : {"$within" : {"$box" : box}}})
+    MineModel.find({loc: {$within: {$box: [lower_left,upper_right]}}},[],{limit: needed_pieces}, function(err, docs) {
 
       if(err !== null) {
         console.log(err);
@@ -153,7 +166,7 @@ DNode(function (client, conn) {
   };
 
   this.saveMine = function(mine) {
-      console.log("saveMine!");
+      //console.log("saveMine!");
       underscore.each(fieldPlayers[1], function(trigger,client) {
         if(conn.id != client) { 
           trigger(mine);
@@ -164,6 +177,6 @@ DNode(function (client, conn) {
 }).listen(server);
 
 // Attach to port 5050
-server.listen(5050);
+server.listen(3000);
 
 

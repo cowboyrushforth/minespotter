@@ -1,7 +1,7 @@
-// Sweeper v0.0.1
+// LiveMine v0.0.1
 
 // Main Application Object
-var Sweeper = {
+var App = {
   screenWidth: null,
   screenHeight: null,
   mainController: null,
@@ -11,19 +11,27 @@ var Sweeper = {
   Models: {},
   Controllers: {},
   Collections: {},
-  remote: null
+  remote: null,
+  debug: true,
+  pieceSize: 72
 };
 
 // Setup Backbone Controller.  Only one for whole app
 // since we use this just for friendly-urls and thats it
-Sweeper.Controllers.Main = Backbone.Controller.extend({
+App.Controllers.Main = Backbone.Controller.extend({
   routes: {
     '' :  'displayRandomLocation',
     '!x/:x/y/:y': 'displaySpecificLocation'
   },
   displayRandomLocation: function() {
-    var x=Math.floor(Math.random()*10000);
-    var y=Math.floor(Math.random()*10000);
+    // in debug mode always just go to 0,0
+    if(App.debug === true) {
+      var x = 0;
+      var y = 0;
+    } else {
+      var x=Math.floor(Math.random()*10000);
+      var y=Math.floor(Math.random()*10000);
+    }
     this.displaySpecificLocation(x,y);
     this.saveLocation('!x/'+x+'/y/'+y);
   },
@@ -31,17 +39,17 @@ Sweeper.Controllers.Main = Backbone.Controller.extend({
 
     console.log('displaySpecificLocation, x: '+x+' y: '+y);
 
-    if(Sweeper.mainView === null) {
-      Sweeper.mainView = new Sweeper.Views.MainView({});
+    if(App.mainView === null) {
+      App.mainView = new App.Views.MainView({});
     }
 
-    Sweeper.mainView.x = y;
-    Sweeper.mainView.y = y;
-    Sweeper.mainView.refreshBoard();
+    App.mainView.x = y;
+    App.mainView.y = y;
+    App.mainView.refreshBoard();
   }
 });
 
-Sweeper.Models.Mine = Backbone.Model.extend({
+App.Models.Mine = Backbone.Model.extend({
   //Mine Possible States:
   //  0: Not Stepped On Yet
   //  1: Stepped On and Safe
@@ -52,11 +60,11 @@ Sweeper.Models.Mine = Backbone.Model.extend({
     console.log('Syncing Mine, meth: '+method);
       switch(method) {
         case 'read':
-        break;
+          break;
         case 'create':
           break;
         case 'update':
-          Sweeper.remote.saveMine(model.attributes);
+          App.remote.saveMine(model.attributes);
           break;
         case 'delete':
           break;
@@ -64,14 +72,14 @@ Sweeper.Models.Mine = Backbone.Model.extend({
   }
 });
 
-Sweeper.Collections.MinePool = Backbone.Collection.extend({
-  model: Sweeper.Models.Mine,
+App.Collections.MinePool = Backbone.Collection.extend({
+  model: App.Models.Mine,
   collectionName: 'mines',
   sync:  function(method, model, success, error) {
     console.log('Syncing MinePool, meth: '+method);
       switch(method) {
         case 'read':
-          Sweeper.remote.readMines(model.x, model.y, Sweeper.screenWidth, Sweeper.screenHeight, model.collectionName, function(res) {
+          App.remote.readMines(model.x, model.y, App.screenWidth, App.screenHeight, model.collectionName, function(res) {
             console.log(res);
             model.add(res);
           });
@@ -86,7 +94,7 @@ Sweeper.Collections.MinePool = Backbone.Collection.extend({
   }
 });
 
-Sweeper.Views.MineView = Backbone.View.extend({
+App.Views.MineView = Backbone.View.extend({
   initialize: function() {
     var self = this;
     this.model.bind('change', function(mv) { self.render(); });
@@ -101,6 +109,7 @@ Sweeper.Views.MineView = Backbone.View.extend({
         // set exploded state
         this.model.set({state: 2});
         //todo - explode radius of mines
+        // actually, maybe that is server side. hrm.
       } else {
         // set safe state
         this.model.set({state: 1});
@@ -131,13 +140,13 @@ Sweeper.Views.MineView = Backbone.View.extend({
       break;
     }
     $(this.el).html(foo).attr('id', this.model.get('_id')).addClass('mine')
-    .css('left', ((this.model.get('loc')[1])*48))
-    .css('top', ((this.model.get('loc')[0])*48));
+    .css('left', ((this.model.get('loc')[0])*App.pieceSize))
+    .css('top', ((this.model.get('loc')[1])*App.pieceSize));
     return this;
   }
 });
 
-Sweeper.Views.MainView = Backbone.View.extend({
+App.Views.MainView = Backbone.View.extend({
   x: null,
   y: null,
   el: null,
@@ -148,15 +157,17 @@ Sweeper.Views.MainView = Backbone.View.extend({
     //up above is too soon. (race)
     this.el = $('#board');
 
-    //hrm..
+    //hrm. not sure how to fix this when
+    //inside of initialize.
     var self = this;
 
     // fire up minePool
-    Sweeper.minePool = new Sweeper.Collections.MinePool();
+    App.minePool = new App.Collections.MinePool();
 
     // for each mine when added to minePool, render it
-    Sweeper.minePool.bind('add', function(mine) {
-      var mineView = new Sweeper.Views.MineView({model: mine});
+    App.minePool.bind('add', function(mine) {
+      $('#loading').hide();
+      var mineView = new App.Views.MineView({model: mine});
       $(self.el).append(mineView.render().el);
     });
 
@@ -167,18 +178,20 @@ Sweeper.Views.MainView = Backbone.View.extend({
     //ie - cycle through minePool pieces and see if they should still be on screen
     //or not, if they are not supposed to be on the screen, remove them
 
-    Sweeper.minePool.x = this.x;
-    Sweeper.minePool.y = this.y;
-    Sweeper.minePool.fetch();
-    Sweeper.remote.subscribeField(1, Sweeper.mineHandler);
+    App.minePool.x = this.x;
+    App.minePool.y = this.y;
+    App.minePool.fetch();
+    App.remote.subscribeField(1, App.mineHandler);
   }
 });
 
 //this receives new mines for the current field
 //we need to replace the, then re-render
-Sweeper.mineHandler = function(new_mine) {
-      console.log("Received New Mine!")
-      var old = Sweeper.minePool.get(new_mine._id);
+App.mineHandler = function(new_mine) {
+      if(App.debug === true) {
+        console.log("Received New Mine!")
+      }
+      var old = App.minePool.get(new_mine._id);
       old.set(new_mine);
 }
 
@@ -186,10 +199,10 @@ Sweeper.mineHandler = function(new_mine) {
 $(function() {
   // fire DNode Up
   DNode().connect(function(remote) {
-    Sweeper.remote = remote;
-    Sweeper.screenWidth  = parseInt($(window).width(),10);
-    Sweeper.screenHeight = parseInt($(window).height(),10);
-    Sweeper.mainController = new Sweeper.Controllers.Main();
+    App.remote = remote;
+    App.screenWidth  = parseInt($(window).width(),10);
+    App.screenHeight = parseInt($(window).height(),10);
+    App.mainController = new App.Controllers.Main();
     // fire backbone up
     Backbone.history.start();
   });
