@@ -40,6 +40,7 @@ var MineSchema = new Schema({
   numTouching  : {type: Number },
   loc          : {type: Array }
 });
+MineSchema.index({loc: "2d"}, { min: -5000000, max: 5000000, unique: true});
 Mongoose.model('Mine', MineSchema);
 var MineModel = Mongoose.model('Mine');
 
@@ -57,8 +58,9 @@ DNode(function (client, conn) {
     needed_pieces = needed_pieces + (needed_pieces_w+needed_pieces_h);
 
     // figure out lower left and upper right corners. do a mongo-spatial-bounding-box
+    // we bump them up by 1 because mongo is < and not <=
     var lower_left = [parseInt(y,10),parseInt(x,10)];
-    var upper_right = [Math.ceil((y+needed_pieces_w)),Math.ceil((x+needed_pieces_h))];
+    var upper_right = [Math.ceil((y+needed_pieces_w))+1,Math.ceil((x+needed_pieces_h))+1];
 
     console.log('readMines called for x: '+x+' y: '+y+' sw: '+screenWidth+' sh: '+screenHeight+' coll: '+collection+' needed pieces: '+needed_pieces+' needed_pieces_w: '+needed_pieces_w);
     console.log('lower_left: '+lower_left+' upper_right: '+upper_right);

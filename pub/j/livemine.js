@@ -25,12 +25,11 @@ App.Controllers.Main = Backbone.Controller.extend({
   },
   displayRandomLocation: function() {
     // in debug mode always just go to 0,0
-    if(App.debug === true) {
-      var x = 0;
-      var y = 0;
-    } else {
-      var x=Math.floor(Math.random()*10000);
-      var y=Math.floor(Math.random()*10000);
+    var x = 0;
+    var y = 0;
+    if(App.debug === false) {
+     x=Math.floor(Math.random()*10000);
+     y=Math.floor(Math.random()*10000);
     }
     this.displaySpecificLocation(x,y);
     this.saveLocation('!x/'+x+'/y/'+y);
