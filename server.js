@@ -17,11 +17,13 @@ var Settings = {
 
 // Connect to Mongo
 Mongoose.connect('mongodb://localhost/livemine_dev');
-  //Fix $near with array.
-  Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$near = function (val) {
+
+// Fix $near with array.
+Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$near = function (val) {
   return this.cast(val);
 };
-//Fix $within
+
+// Fix $within
 Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$within = function (val) {
   return val;
 };
