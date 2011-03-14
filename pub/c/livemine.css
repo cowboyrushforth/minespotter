@@ -1,12 +1,30 @@
+body {
+  overflow: hidden;
+}
+
+div#board {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
 div.mine {
-  width: 69px;
-  height: 69px;
+  width: 72px;
+  height: 72px;
   text-align: center;
   position: absolute;
   cursor: pointer;
-  border: 1px outset #5aa0b8;
+  -webkit-box-shadow: inset 1px 1px 5px 2px #888;
+  box-shadow: inset 1px 1px 5px 2px #888;
+  -moz-box-shadow: inset 1px 1px 5px 2px #888;
+  border: 1px inset #5aa0b8;
+  background-color: #ccc;
 }
 
-body {
-  overflow: hidden;
+.blue {
+  color: blue;
+}
+
+.red {
+  color: red;
 }

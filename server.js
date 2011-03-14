@@ -12,7 +12,7 @@ var ObjectId = Schema.ObjectId;
 var fieldPlayers = {};
 var playerFields = {};
 var Settings = {
-  pieceSize: 72 
+  pieceSize: 72
 };
 
 // Connect to Mongo
@@ -55,28 +55,31 @@ DNode(function (client, conn) {
 
   this.readMines = function(x,y,screenWidth,screenHeight,collection,cb) {
 
-    var needed_pieces_w = Math.ceil(screenWidth/Settings.pieceSize);
-    var needed_pieces_h = Math.ceil(screenHeight/Settings.pieceSize);
-    var needed_pieces = Math.ceil(needed_pieces_w*needed_pieces_h);
-    needed_pieces = needed_pieces + (needed_pieces_w); /*+needed_pieces_h); */
+    var needed_pieces_w = parseInt((screenWidth/Settings.pieceSize),10);
+    var needed_pieces_h = parseInt((screenHeight/Settings.pieceSize),10);
+    var needed_pieces = parseInt((needed_pieces_w*needed_pieces_h),10);
+    needed_pieces = needed_pieces + (needed_pieces_w);
+    x = parseInt(x,10);
+    y = parseInt(y,10);
 
     // figure out lower left and upper right corners. do a mongo-spatial-bounding-box
     // we bump them up by 1 because mongo is < and not <=
     // semantics here is confusing. this really means upper_left and lower_right.
-    var lower_left = [parseInt(y,10),parseInt(x,10)];
-    var upper_right = [Math.ceil((y+needed_pieces_h)),Math.ceil((x+needed_pieces_w))];
+    var lower_left = [y,x];
+    var upper_right = [Math.ceil(y+needed_pieces_h),Math.ceil(x+needed_pieces_w)];
 
-    console.log('readMines called for x: '+x+' y: '+y+' sw: '+screenWidth+' sh: '+screenHeight+' coll: '+collection+' needed pieces: '+needed_pieces+' needed_pieces_w: '+needed_pieces_w);
+    console.log('readMines called for x: '+x+' y: '+y+' sw: '+screenWidth+' sh: '+screenHeight+' needed pieces: '+needed_pieces+' needed_pieces_w: '+needed_pieces_w+' needed_pieces_h: '+needed_pieces_h);
     console.log('lower_left: '+lower_left+' upper_right: '+upper_right);
 
     // calculate list of what pieces will make up this players screen
     var needed_pieces_list = [];
     var point = lower_left;
     while((point[0] != upper_right[0]) || (upper_right[1] != point[1])) {
-      needed_pieces_list.push(point[0]+'-'+point[1]);
+      //console.log("needed: "+point[0]+':'+point[1]);
+      needed_pieces_list.push(point[0]+':'+point[1]);
       point = [point[0],point[1]+1];
-      if(point[1] > needed_pieces_w) {
-        point[1] = 0;
+      if(point[1] > upper_right[1]) {
+        point[1] = lower_left[1];
         point[0] = point[0]+1;
       }
     }
@@ -94,13 +97,16 @@ DNode(function (client, conn) {
 
       // remove pieces we have from needed_pieces_list
       docs.forEach(function(doc) {
-        needed_pieces_list = underscore.without(needed_pieces_list, doc.loc[0]+'-'+doc.loc[1] );
+        needed_pieces_list = underscore.without(needed_pieces_list, doc.loc[0]+':'+doc.loc[1] );
+       // console.log("\tNeed to create "+needed_pieces_list.length+" pieces");
       });
+
+      console.log("\tNeed to create "+needed_pieces_list.length+" pieces");
 
       // now insert all needed pieces into mongo that we didnt have
       needed_pieces_list.forEach(function(piece) {
 
-        var new_y = piece.split('-');
+        var new_y = piece.split(':');
         var new_x = new_y[1];
         new_y = new_y[0];
 
@@ -167,6 +173,15 @@ DNode(function (client, conn) {
 
   this.saveMine = function(mine) {
     //console.log("saveMine!");
+
+    MineModel.findById(mine._id, function (err, dbmine) {
+      if (!err) {
+        dbmine.state = mine.state;
+        dbmine.save(function (err) {
+        });
+      }
+    });
+
     underscore.each(fieldPlayers[1], function(trigger,client) {
       if(conn.id != client) {
         trigger(mine);
@@ -176,7 +191,5 @@ DNode(function (client, conn) {
 
 }).listen(server);
 
-// Attach to port 5050
+// Attach to port 3000
 server.listen(3000);
-
-

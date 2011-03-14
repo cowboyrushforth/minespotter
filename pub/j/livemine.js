@@ -13,7 +13,8 @@ var App = {
   Collections: {},
   remote: null,
   debug: true,
-  pieceSize: 72
+  pieceSize: 72,
+  subscribedFields: []
 };
 
 // Setup Backbone Controller.  Only one for whole app
@@ -32,9 +33,9 @@ App.Controllers.Main = Backbone.Controller.extend({
      y=Math.floor(Math.random()*10000);
     }
     this.displaySpecificLocation(x,y);
-    this.saveLocation('!x/'+x+'/y/'+y);
   },
   displaySpecificLocation: function(x,y) {
+    this.saveLocation('!x/'+x+'/y/'+y);
 
     console.log('displaySpecificLocation, x: '+x+' y: '+y);
 
@@ -42,7 +43,7 @@ App.Controllers.Main = Backbone.Controller.extend({
       App.mainView = new App.Views.MainView({});
     }
 
-    App.mainView.x = y;
+    App.mainView.x = x;
     App.mainView.y = y;
     App.mainView.refreshBoard();
   }
@@ -79,8 +80,19 @@ App.Collections.MinePool = Backbone.Collection.extend({
       switch(method) {
         case 'read':
           App.remote.readMines(model.x, model.y, App.screenWidth, App.screenHeight, model.collectionName, function(res) {
-            console.log(res);
-            model.add(res);
+            //console.log(res);
+            //var old = App.minePool.get(new_mine._id);
+            //old.set(new_mine);
+            //model.add(res);
+            //model.add(res);
+            _.each(res, function(m) {
+                var old = App.minePool.get(m._id);
+                if(old) {
+                  old.set(m);
+                } else {
+                  model.add([m]);
+                }
+            });
           });
         break;
         case 'create':
@@ -99,7 +111,7 @@ App.Views.MineView = Backbone.View.extend({
     this.model.bind('change', function(mv) { self.render(); });
   },
   events: {
-    'click' : 'triggerMine',
+    'dblclick' : 'triggerMine',
     'mousedown' : 'pressMine'
   },
   triggerMine: function() {
@@ -129,10 +141,10 @@ App.Views.MineView = Backbone.View.extend({
         foo += "ok";
       break;
       case 1:
-        foo += this.model.get('numTouching');
+        foo += "<span class='blue'>"+this.model.get('numTouching')+"</span>";
       break;
       case 2:
-        foo += "OH NOS!";
+        foo += "<span class='red'>OH NOS!</span>";
       break;
       case 9:
         foo += "Unknown";
@@ -172,17 +184,34 @@ App.Views.MainView = Backbone.View.extend({
       $(self.el).append(mineView.render().el);
     });
 
+    $(this.el).draggable({
+      stop: function(ev,ui) {
+          var x = parseInt((parseInt($(ui.helper).css('left'),10)/App.pieceSize),10)*-1;
+          var y = parseInt((parseInt($(ui.helper).css('top'),10)/App.pieceSize),10)*-1;
+          App.mainController.displaySpecificLocation(x,y);
+      }
+    });
   },
   refreshBoard: function() {
 
-    //todo - move board to appropriate place
     //ie - cycle through minePool pieces and see if they should still be on screen
     //or not, if they are not supposed to be on the screen, remove them
 
     App.minePool.x = this.x;
     App.minePool.y = this.y;
+
+    //move board to appropriate place
+    $('#board').css('left', ((this.x*72)*-1));
+    $('#board').css('top', ((this.y*72)*-1));
+
     App.minePool.fetch();
-    App.remote.subscribeField(1, App.mineHandler);
+
+    //todo - dynamically calculate which fields we are subscribed too.
+    //unsubscribe from ones we dont want
+    if(_.indexOf(App.subscribedFields, 1) == -1) {
+      App.remote.subscribeField(1, App.mineHandler);
+      App.subscribedFields.push(1);
+    }
   }
 });
 
