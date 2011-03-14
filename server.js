@@ -17,8 +17,8 @@ var Settings = {
 
 // Connect to Mongo
 Mongoose.connect('mongodb://localhost/livemine_dev');
-//Fix $near with array.
-Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$near = function (val) {
+  //Fix $near with array.
+  Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$near = function (val) {
   return this.cast(val);
 };
 //Fix $within
@@ -28,8 +28,8 @@ Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$within = function (va
 
 // Create Server
 var server = Connect.createServer(
-    // js lint can suck it, have no choice here.
-    Connect.static(__dirname + '/pub')
+  // js lint can suck it, have no choice here.
+  Connect.static(__dirname + '/pub')
 );
 
 // setup Mine Model
@@ -49,6 +49,9 @@ DNode(function (client, conn) {
   //this will read all mines that are relevant
   //considering current x position, y position and
   //how much screen real estate we have to work with
+ 
+  //todo - make this more separated out with callbacks and things
+  //make it much smaller and more efficient.
 
   this.readMines = function(x,y,screenWidth,screenHeight,collection,cb) {
 
@@ -59,102 +62,86 @@ DNode(function (client, conn) {
 
     // figure out lower left and upper right corners. do a mongo-spatial-bounding-box
     // we bump them up by 1 because mongo is < and not <=
-    var lower_left = [parseInt(x,10),parseInt(y,10)];
-    var upper_right = [Math.ceil((y+needed_pieces_w))+1,Math.ceil((x+needed_pieces_h))+1];
+    // semantics here is confusing. this really means upper_left and lower_right.
+    var lower_left = [parseInt(y,10),parseInt(x,10)];
+    var upper_right = [Math.ceil((y+needed_pieces_h)),Math.ceil((x+needed_pieces_w))];
 
     console.log('readMines called for x: '+x+' y: '+y+' sw: '+screenWidth+' sh: '+screenHeight+' coll: '+collection+' needed pieces: '+needed_pieces+' needed_pieces_w: '+needed_pieces_w);
     console.log('lower_left: '+lower_left+' upper_right: '+upper_right);
 
-    //get documents for this collection
+    // calculate list of what pieces will make up this players screen
+    var needed_pieces_list = [];
+    var point = lower_left;
+    while((point[0] != upper_right[0]) || (upper_right[1] != point[1])) {
+      needed_pieces_list.push(point[0]+'-'+point[1]);
+      point = [point[0],point[1]+1];
+      if(point[1] > needed_pieces_w) {
+        point[1] = 0;
+        point[0] = point[0]+1;
+      }
+    }
+    console.log("\tNeeded pieces: "+needed_pieces_list.length);
 
-    //near query seems interesting, but irrelevant.
-    //MineModel.find({loc: {$near: [parseInt(y,10),parseInt(x,10)]}},[],{limit: needed_pieces}, function(err, docs) {
-    
-    //find all of them
-    MineModel.find({},function(err, docs) {
-
-    //box query is probably best fit. (still buggy)
-    //MineModel.find({loc: {$within: {$box: [lower_left,upper_right]}}},[],{limit: needed_pieces}, function(err, docs) {
+    //get needed pieces from mongo
+    MineModel.find({'loc': {'$within': {'$box': [lower_left,upper_right]}}},[],{}, function(err, docs) {
 
       if(err !== null) {
         console.log(err);
         return;
       }
-      console.log("Found "+docs.length+" docs..");
-      //if docs doesnt contain the expected amount of
-      //pieces, we need to generate pieces
-      var cur_max_x = parseInt(x,10);
-      var cur_max_y = parseInt(y,10);
-      var last_x = 0;
-      var last_y = 0;
 
+      console.log("\tFound "+docs.length+" pieces");
+
+      // remove pieces we have from needed_pieces_list
       docs.forEach(function(doc) {
-        if(doc.loc[1] > cur_max_x) {
-          cur_max_x = doc.loc[1];
-        }
-        last_x = doc.loc[1];
-        if(doc.loc[0] > cur_max_y) {
-          cur_max_y = doc.loc[0];
-        }
-        last_y = doc.loc[0];
+        needed_pieces_list = underscore.without(needed_pieces_list, doc.loc[0]+'-'+doc.loc[1] );
       });
 
-      console.log('cur_max_x: '+cur_max_x+' cur_max_y: '+cur_max_y+' last_x: '+last_x+' last_y: '+last_y);
+      // now insert all needed pieces into mongo that we didnt have
+      needed_pieces_list.forEach(function(piece) {
 
+        var new_y = piece.split('-');
+        var new_x = new_y[1];
+        new_y = new_y[0];
 
-      if(docs.length < needed_pieces) {
+        //console.log("Generating Piece: x: "+new_x+" y: "+new_y);
 
-        var diff = needed_pieces - docs.length;
-        console.log('Generating '+diff+' pieces');
-        var new_x = cur_max_x;
-        var new_y = cur_max_y;
+        var new_mine = new MineModel();
 
-        for(var i = docs.length; i < needed_pieces; i++) {
+        new_mine.loc[1]  = parseInt(new_x,10);
+        new_mine.loc[0]  = parseInt(new_y,10);
+        new_mine.isMine = false;
 
-          console.log("Generating Piece: "+i+" x: "+new_x+" y: "+new_y);
-
-          var new_mine = new MineModel();
-
-          new_mine.loc[1]  = new_x;
-          new_mine.loc[0]  = new_y;
-          new_mine.isMine = false;
-
-          var chance=Math.floor(Math.random()*100);
-          if(chance > 50) {
-            new_mine.isMine = true; 
-          }
-
-          new_mine.numTouching = 1;
-          new_mine.state  = 0;
-
-          new_mine.save(function(err) {
-            if(err !== null) {
-              console.log("ohnos!");
-              console.log(err);
-              console.log(new_mine.toObject());
-            }
-          });
-
-          docs.push(new_mine);
-
-
-          //decide what next piece would be. 
-          //if our proposed x is beyond our width, we need to 
-          //start a new row, one down and at x=0
-          if(new_x >= needed_pieces_w-1) {
-            new_x = 0;
-            new_y = new_y + 1;
-          } else {
-            new_x = new_x + 1;
-          }
+        var chance=Math.floor(Math.random()*100);
+        if(chance > 50) {
+          new_mine.isMine = true;
         }
-      }
+
+        new_mine.numTouching = 1; // TODO: Actually calculate this
+        new_mine.state  = 0;
+        new_mine.save(function(err) {
+          if(err !== null) {
+            console.log("------ohnos db error!-------");
+            console.log(err);
+            console.log(new_mine.toObject());
+          }
+        });
+
+        //this is a bit tricky here since database stuff is happening sometimes
+        //after the request finishes. so this will always be
+        //sent to browser, but not always inserted (if there was an error)
+        //sort of sketchy and probably a better way to do this.
+        docs.push(new_mine);
+
+      });
+
 
       console.log("About to CB");
 
       cb(underscore.map(docs, function(d) {
         return d.toObject();
       }));
+
     });
 
   };
@@ -171,20 +158,20 @@ DNode(function (client, conn) {
     //ie - only one field subscription at a time allowed
 
     conn.on('end', function() {
-        underscore.each(playerFields[conn.id], function(p) {
-          delete fieldPlayers[p][conn.id];
-        });
-        delete playerFields[conn.id];
+      underscore.each(playerFields[conn.id], function(p) {
+        delete fieldPlayers[p][conn.id];
+      });
+      delete playerFields[conn.id];
     });
   };
 
   this.saveMine = function(mine) {
-      //console.log("saveMine!");
-      underscore.each(fieldPlayers[1], function(trigger,client) {
-        if(conn.id != client) { 
-          trigger(mine);
-        }
-      });
+    //console.log("saveMine!");
+    underscore.each(fieldPlayers[1], function(trigger,client) {
+      if(conn.id != client) {
+        trigger(mine);
+      }
+    });
   };
 
 }).listen(server);

@@ -123,19 +123,19 @@ App.Views.MineView = Backbone.View.extend({
     //only a visual indicator (todo)
   },
   render: function() {
-    var foo = "";
+    var foo = "<br/>";
     switch(this.model.get('state')) {
       case 0:
-        foo = "ok";
+        foo += "ok";
       break;
       case 1:
-        foo = this.model.get('numTouching');
+        foo += this.model.get('numTouching');
       break;
       case 2:
-        foo = "OH NOS!";
+        foo += "OH NOS!";
       break;
       case 9:
-        foo = "Unknown";
+        foo += "Unknown";
       break;
     }
     $(this.el).html(foo).attr('id', this.model.get('_id')).addClass('mine')
