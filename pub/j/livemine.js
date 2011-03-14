@@ -129,7 +129,7 @@ App.Views.MineView = Backbone.View.extend({
         foo = "ok";
       break;
       case 1:
-        foo = "safe numTouching:"+this.model.get('numTouching');
+        foo = this.model.get('numTouching');
       break;
       case 2:
         foo = "OH NOS!";
@@ -139,8 +139,10 @@ App.Views.MineView = Backbone.View.extend({
       break;
     }
     $(this.el).html(foo).attr('id', this.model.get('_id')).addClass('mine')
-    .css('left', ((this.model.get('loc')[0])*App.pieceSize))
-    .css('top', ((this.model.get('loc')[1])*App.pieceSize));
+    .css('left', ((this.model.get('loc')[1])*App.pieceSize))
+    .css('top', ((this.model.get('loc')[0])*App.pieceSize))
+    .attr('data-x', this.model.get('loc')[1])
+    .attr('data-y', this.model.get('loc')[0]);
     return this;
   }
 });
@@ -204,6 +206,6 @@ $(function() {
     App.mainController = new App.Controllers.Main();
     // fire backbone up
     Backbone.history.start();
-  });
+  }, {reconnect: 2000});
 });
 

@@ -52,24 +52,29 @@ DNode(function (client, conn) {
 
   this.readMines = function(x,y,screenWidth,screenHeight,collection,cb) {
 
-    var needed_pieces_w = Math.floor(screenWidth/Settings.pieceSize);
-    var needed_pieces_h = Math.floor(screenHeight/Settings.pieceSize);
+    var needed_pieces_w = Math.ceil(screenWidth/Settings.pieceSize);
+    var needed_pieces_h = Math.ceil(screenHeight/Settings.pieceSize);
     var needed_pieces = Math.ceil(needed_pieces_w*needed_pieces_h);
-    needed_pieces = needed_pieces + (needed_pieces_w+needed_pieces_h);
+    needed_pieces = needed_pieces + (needed_pieces_w); /*+needed_pieces_h); */
 
     // figure out lower left and upper right corners. do a mongo-spatial-bounding-box
     // we bump them up by 1 because mongo is < and not <=
-    var lower_left = [parseInt(y,10),parseInt(x,10)];
+    var lower_left = [parseInt(x,10),parseInt(y,10)];
     var upper_right = [Math.ceil((y+needed_pieces_w))+1,Math.ceil((x+needed_pieces_h))+1];
 
     console.log('readMines called for x: '+x+' y: '+y+' sw: '+screenWidth+' sh: '+screenHeight+' coll: '+collection+' needed pieces: '+needed_pieces+' needed_pieces_w: '+needed_pieces_w);
     console.log('lower_left: '+lower_left+' upper_right: '+upper_right);
 
     //get documents for this collection
+
+    //near query seems interesting, but irrelevant.
     //MineModel.find({loc: {$near: [parseInt(y,10),parseInt(x,10)]}},[],{limit: needed_pieces}, function(err, docs) {
-    //> box = [[40.73083, -73.99756], [40.741404,  -73.988135]]
-    //> db.places.find({"loc" : {"$within" : {"$box" : box}}})
-    MineModel.find({loc: {$within: {$box: [lower_left,upper_right]}}},[],{limit: needed_pieces}, function(err, docs) {
+    
+    //find all of them
+    MineModel.find({},function(err, docs) {
+
+    //box query is probably best fit. (still buggy)
+    //MineModel.find({loc: {$within: {$box: [lower_left,upper_right]}}},[],{limit: needed_pieces}, function(err, docs) {
 
       if(err !== null) {
         console.log(err);
@@ -104,9 +109,9 @@ DNode(function (client, conn) {
         var new_x = cur_max_x;
         var new_y = cur_max_y;
 
-        for(var i = docs.length; i <= needed_pieces; i++) {
+        for(var i = docs.length; i < needed_pieces; i++) {
 
-          //console.log("Generating Piece: "+i);
+          console.log("Generating Piece: "+i+" x: "+new_x+" y: "+new_y);
 
           var new_mine = new MineModel();
 
@@ -123,14 +128,20 @@ DNode(function (client, conn) {
           new_mine.state  = 0;
 
           new_mine.save(function(err) {
+            if(err !== null) {
+              console.log("ohnos!");
+              console.log(err);
+              console.log(new_mine.toObject());
+            }
           });
 
-          docs.push(new_mine); 
+          docs.push(new_mine);
+
 
           //decide what next piece would be. 
           //if our proposed x is beyond our width, we need to 
           //start a new row, one down and at x=0
-          if(new_x >= needed_pieces_w) {
+          if(new_x >= needed_pieces_w-1) {
             new_x = 0;
             new_y = new_y + 1;
           } else {
