@@ -21,6 +21,10 @@ div.mine {
   background-color: #ccc;
 }
 
+div.mine-state-2 {
+  background-image: url('/i/bomb.png');
+}
+
 .blue {
   color: blue;
 }

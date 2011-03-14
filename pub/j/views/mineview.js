@@ -37,7 +37,7 @@ App.Views.MineView = Backbone.View.extend({
         foo += "<span class='blue'>"+this.model.get('numTouching')+"</span>";
       break;
       case 2:
-        foo += "<span class='red'>OH NOS!</span>";
+        //handled via css
       break;
       case 9:
         foo += "Unknown";
@@ -47,7 +47,8 @@ App.Views.MineView = Backbone.View.extend({
     .css('left', ((this.model.get('loc')[1])*App.pieceSize))
     .css('top', ((this.model.get('loc')[0])*App.pieceSize))
     .attr('data-x', this.model.get('loc')[1])
-    .attr('data-y', this.model.get('loc')[0]);
+    .attr('data-y', this.model.get('loc')[0])
+    .addClass('mine-state-'+this.model.get('state'));
     return this;
   }
 });
