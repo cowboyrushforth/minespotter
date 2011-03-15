@@ -51,5 +51,10 @@ App.Views.MainView = Backbone.View.extend({
       App.remote.subscribeField(1, App.mineHandler);
       App.subscribedFields.push(1);
     }
-  }
+  },
+  resize: function() {
+    if(App.sidebarView !== null) {
+      App.sidebarView.resize();   
+    } 
+  } 
 });

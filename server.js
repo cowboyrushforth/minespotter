@@ -119,9 +119,9 @@ DNode(function (client, conn) {
         new_mine.loc[0]  = parseInt(new_y,10);
         new_mine.canExplode = false;
 
-        // 20% chance we are explodable.
+        // 29% chance we are explodable.
         var chance=Math.floor(Math.random()*100);
-        if(chance < 20) {
+        if(chance < 29) {
           new_mine.canExplode = true;
         }
 

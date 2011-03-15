@@ -7,6 +7,22 @@ It is based on node.js, connect, dnode+socket.io, backbone.js, and jquery.
 
 It is in extreme early stages of development, but progress is happening rapidly.
 
+This is my virgin step into the world of node, so is very much an educational project :)
+
+Big props to the wordsquared guys as their product inspired this!  
+
+Hope to launch this on a public domain for the world to play with some day.
+
+Todo:
+-scores
+-facebook login
+-share mineField
+-minimap
+-finish mineField stuff
+    -subscription optimization
+-optimize board more
+    -clean up more aggresively after scrolling
+-asthetics
 
 
 LICENSE: 

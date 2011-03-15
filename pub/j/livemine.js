@@ -6,6 +6,7 @@ var App = {
   screenHeight: null,
   mainController: null,
   mainView: null,
+  sidebarView: null,
   minePool: null,
   Views: {},
   Models: {},
@@ -28,6 +29,13 @@ App.mineHandler = function(new_mine) {
       old.set(new_mine);
 }
 
+App.resize = function() {
+        App.screenWidth  = parseInt($(window).width(),10);
+        App.screenHeight = parseInt($(window).height(),10);
+        App.mainView.resize()
+        App.mainView.refreshBoard();
+}
+
 
 $(function() {
   // fire DNode Up
@@ -39,5 +47,7 @@ $(function() {
     // fire backbone up
     Backbone.history.start();
   }, {reconnect: 2000});
+  // setup resize handler
+  $(window).resize(App.resize);
 });
 

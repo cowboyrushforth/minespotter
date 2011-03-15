@@ -1,38 +1,52 @@
 body {
-  overflow: hidden;
-  background-color: #ccc;
+    overflow: hidden;
+    background-color: #ccc;
+    font-family: helvetica, arial, tahoma, verdana;
 }
 
 div#board {
-  position: absolute;
-  left: 0px;
-  top: 0px;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 15;
+}
+
+div#sidebar {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 400px;
+    display: block;
+    width: 175px;
+    background-color: black;
+    opacity: 0.5;
+    z-index: 25;
+    color: white;
+    text-align: center;
 }
 
 div.mine {
-  width: 66px;
-  height: 66px;
-  text-align: center;
-  position: absolute;
-  cursor: pointer;
-/* too cpu intensive while dragging :(
-  -webkit-box-shadow: inset 1px 1px 15px 1px #99C;
-  box-shadow: inset 1px 1px 15px 1px #99C;
-  -moz-box-shadow: inset 1px 1px 15px 1px #99C;
-  */
+    width: 66px;
+    height: 66px;
+    text-align: center;
+    font-size: 3.5em;
+    font-weight: bolder;
+    position: absolute;
+    cursor: pointer;
+    border: 3px outset #888;
+    background-color: #ccc;
+    z-index: 16;
+}
 
-  border: 3px outset #888;
-  background-color: #ccc;
+div.pressed {
+    border: 3px inset #888;
 }
 
 div.mine-state-2 {
-  background-image: url('/i/bomb.png');
+    background-image: url('/i/bomb.png');
 }
 
 .blue {
-  color: blue;
+    color: blue;
 }
 
-.red {
-  color: red;
-}
