@@ -3,30 +3,28 @@ App.Collections.MinePool = Backbone.Collection.extend({
   collectionName: 'mines',
   sync:  function(method, model, success, error) {
     console.log('Syncing MinePool, meth: '+method);
-      switch(method) {
-        case 'read':
-          App.remote.readMines(model.x, model.y, App.screenWidth, App.screenHeight, model.collectionName, function(res) {
-            //console.log(res);
-            //var old = App.minePool.get(new_mine._id);
-            //old.set(new_mine);
-            //model.add(res);
-            //model.add(res);
-            _.each(res, function(m) {
-                var old = App.minePool.get(m._id);
-                if(old) {
-                  old.set(m);
-                } else {
-                  model.add([m]);
-                }
-            });
-          });
+    switch(method) {
+      case 'read':
+        // get remote mines
+        App.remote.readMines(model.x, model.y, App.screenWidth, App.screenHeight, function(res) {
+        // for each mine, see if its something the minePool already
+        // has or not. update/add appropriately
+        _.each(res, function(m) {
+          var old = App.minePool.get(m._id);
+          if(old) {
+            old.set(m);
+          } else {
+            model.add([m]);
+          }
+        });
+      });
+      break;
+      case 'create':
         break;
-        case 'create':
-          break;
-        case 'update':
-          break;
-        case 'delete':
-          break;
-      }
+      case 'update':
+        break;
+      case 'delete':
+        break;
+    }
   }
 });

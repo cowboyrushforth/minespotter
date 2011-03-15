@@ -48,14 +48,14 @@ var MineModel = Mongoose.model('Mine');
 
 DNode(function (client, conn) {
 
-  //this will read all mines that are relevant
-  //considering current x position, y position and
-  //how much screen real estate we have to work with
- 
-  //todo - make this more separated out with callbacks and things
-  //make it much smaller and more efficient.
+  // this will read all mines that are relevant
+  // considering current x position, y position and
+  // how much screen real estate we have to work with
 
-  this.readMines = function(x,y,screenWidth,screenHeight,collection,cb) {
+  // todo - make this more separated out with callbacks and things
+  // make it much smaller and more efficient.
+
+  this.readMines = function(x,y,screenWidth,screenHeight,cb) {
 
     var needed_pieces_w = parseInt((screenWidth/Settings.pieceSize),10);
     var needed_pieces_h = parseInt((screenHeight/Settings.pieceSize),10);
@@ -87,7 +87,7 @@ DNode(function (client, conn) {
     }
     console.log("\tNeeded pieces: "+needed_pieces_list.length);
 
-    //get needed pieces from mongo
+    // get needed pieces from mongo
     MineModel.find({'loc': {'$within': {'$box': [lower_left,upper_right]}}},[],{}, function(err, docs) {
 
       if(err !== null) {
@@ -100,7 +100,6 @@ DNode(function (client, conn) {
       // remove pieces we have from needed_pieces_list
       docs.forEach(function(doc) {
         needed_pieces_list = underscore.without(needed_pieces_list, doc.loc[0]+':'+doc.loc[1] );
-       // console.log("\tNeed to create "+needed_pieces_list.length+" pieces");
       });
 
       console.log("\tNeed to create "+needed_pieces_list.length+" pieces");
@@ -120,6 +119,7 @@ DNode(function (client, conn) {
         new_mine.loc[0]  = parseInt(new_y,10);
         new_mine.canExplode = false;
 
+        // 20% chance we are explodable.
         var chance=Math.floor(Math.random()*100);
         if(chance < 20) {
           new_mine.canExplode = true;
@@ -164,6 +164,11 @@ DNode(function (client, conn) {
 
     //todo remove from other fields now
     //ie - only one field subscription at a time allowed
+    //unless your half in one field and half in another.
+    //so i guess we have to allow up to 4 subscriptions
+    //or possibly (probably the better thing to do) is
+    //calculate which fields we should be subscribing to
+    //on the server side..
 
     conn.on('end', function() {
       underscore.each(playerFields[conn.id], function(p) {
@@ -174,36 +179,44 @@ DNode(function (client, conn) {
   };
 
   this.saveMine = function(mine) {
-    //console.log("saveMine!");
 
-      MineModel.findById(mine._id, function (err, dbmine) {
-              if (!err) {
-              dbmine.state = mine.state;
-              dbmine.save(function (err) {
-                  //handle explosions.
-                  if(!err) {
-                  if(mine.canExplode) {
-                  console.log("Handling Explosion!!!");
-                  var lower_left = [mine.loc[0]-1,mine.loc[1]-1];
-                  var upper_right = [mine.loc[0]+1, mine.loc[1]+1];
-                  MineModel.find({'_id' : {'$ne' : mine._id }, 'state' : 0,'loc': {'$within': {'$box': [lower_left,upper_right]}}},[],{}, function(err, docs) {
-                      if(!err) {
-                      docs.forEach(function(d) {
-                          if(d.canExplode) {
-                          d.state = 2;
-                          d.save(function(err) { });
-                          underscore.each(fieldPlayers[1], function(trigger,client) {
-                              trigger(d.toObject());
-                              });
-                          }
-                          });
-                      }
+    // find mine we need to update
+    MineModel.findById(mine._id, function (err, dbmine) {
+      if (!err) {
+        // set new state
+        dbmine.state = mine.state;
+        // save mine
+        dbmine.save(function (err) {
+          if(!err) {
+            // handle explosions.
+            if(mine.canExplode) {
+              console.log("Handling Explosion!!!");
+              // scan a 2d box around area for other mines.
+              // we could limit this search to only finding mines
+              // i just wonder if we need to do anything to the near pieces
+              // we probably need to change them to another state too.
+              var lower_left = [mine.loc[0]-1,mine.loc[1]-1];
+              var upper_right = [mine.loc[0]+1, mine.loc[1]+1];
+              MineModel.find({'_id' : {'$ne' : mine._id }, 'state' : 0,'loc': {'$within': {'$box': [lower_left,upper_right]}}},[],{}, function(err, docs) {
+                if(!err) {
+                  docs.forEach(function(d) {
+                    // we found a mine nearby that needs exploding.
+                    if(d.canExplode) {
+                      d.state = 2;
+                      d.save(function(err) { });
+                      // notify other people in this field
+                      underscore.each(fieldPlayers[1], function(trigger,client) {
+                        trigger(d.toObject());
                       });
-                  }
-                  }
+                    }
+                  });
+                }
               });
-              }
-      });
+            }
+          }
+        });
+      }
+    });
 
     underscore.each(fieldPlayers[1], function(trigger,client) {
       if(conn.id != client) {
