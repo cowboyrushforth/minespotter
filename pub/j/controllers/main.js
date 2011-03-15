@@ -9,10 +9,10 @@ App.Controllers.Main = Backbone.Controller.extend({
     // in debug mode always just go to 0,0
     var x = 0;
     var y = 0;
-    if(App.debug === false) {
+//    if(App.debug === false) {
      x=Math.floor(Math.random()*10000);
      y=Math.floor(Math.random()*10000);
-    }
+  //  }
     this.displaySpecificLocation(x,y);
   },
   displaySpecificLocation: function(x,y) {

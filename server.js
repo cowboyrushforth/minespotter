@@ -67,8 +67,8 @@ DNode(function (client, conn) {
     // figure out lower left and upper right corners. do a mongo-spatial-bounding-box
     // we bump them up by 1 because mongo is < and not <=
     // semantics here is confusing. this really means upper_left and lower_right.
-    var lower_left = [y,x];
-    var upper_right = [Math.ceil(y+needed_pieces_h),Math.ceil(x+needed_pieces_w)];
+    var lower_left = [y-1,x-1];
+    var upper_right = [Math.ceil(y+needed_pieces_h)+1,Math.ceil(x+needed_pieces_w)+1];
 
     console.log('readMines called for x: '+x+' y: '+y+' sw: '+screenWidth+' sh: '+screenHeight+' needed pieces: '+needed_pieces+' needed_pieces_w: '+needed_pieces_w+' needed_pieces_h: '+needed_pieces_h);
     console.log('lower_left: '+lower_left+' upper_right: '+upper_right);
@@ -121,7 +121,7 @@ DNode(function (client, conn) {
         new_mine.canExplode = false;
 
         var chance=Math.floor(Math.random()*100);
-        if(chance > 50) {
+        if(chance < 20) {
           new_mine.canExplode = true;
         }
 
@@ -176,32 +176,34 @@ DNode(function (client, conn) {
   this.saveMine = function(mine) {
     //console.log("saveMine!");
 
-    MineModel.findById(mine._id, function (err, dbmine) {
-      if (!err) {
-        dbmine.state = mine.state;
-        dbmine.save(function (err) {
-          //handle explosions.
-          if(!err) {
-            if(mine.canExplode) {
-              console.log("Handling Explosion!!!");
-              var lower_left = [mine.loc[0]-2,mine.loc[1]-2];
-              var upper_right = [mine.loc[1]+2, mine.loc[1]+2];
-              MineModel.find({'loc': {'$within': {'$box': [lower_left,upper_right]}}},[],{}, function(err, docs) {
-                docs.forEach(function(d) {
-                  if(d.canExplode) {
-                    d.state = 2;
-                    d.save(function(err) { });
-                    underscore.each(fieldPlayers[1], function(trigger,client) {
-                        trigger(d.toObject());
-                    });
+      MineModel.findById(mine._id, function (err, dbmine) {
+              if (!err) {
+              dbmine.state = mine.state;
+              dbmine.save(function (err) {
+                  //handle explosions.
+                  if(!err) {
+                  if(mine.canExplode) {
+                  console.log("Handling Explosion!!!");
+                  var lower_left = [mine.loc[0]-1,mine.loc[1]-1];
+                  var upper_right = [mine.loc[0]+1, mine.loc[1]+1];
+                  MineModel.find({'_id' : {'$ne' : mine._id }, 'state' : 0,'loc': {'$within': {'$box': [lower_left,upper_right]}}},[],{}, function(err, docs) {
+                      if(!err) {
+                      docs.forEach(function(d) {
+                          if(d.canExplode) {
+                          d.state = 2;
+                          d.save(function(err) { });
+                          underscore.each(fieldPlayers[1], function(trigger,client) {
+                              trigger(d.toObject());
+                              });
+                          }
+                          });
+                      }
+                      });
                   }
-                });
+                  }
               });
-            }
-          }
-        });
-      }
-    });
+              }
+      });
 
     underscore.each(fieldPlayers[1], function(trigger,client) {
       if(conn.id != client) {
