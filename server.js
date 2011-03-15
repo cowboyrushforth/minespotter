@@ -38,7 +38,7 @@ var server = Connect.createServer(
 var MineSchema = new Schema({
   id           : {type: ObjectId},
   state        : {type: Number },
-  isMine       : {type: Boolean },
+  canExplode   : {type: Boolean },
   numTouching  : {type: Number },
   loc          : {type: Array }
 });
@@ -118,11 +118,11 @@ DNode(function (client, conn) {
 
         new_mine.loc[1]  = parseInt(new_x,10);
         new_mine.loc[0]  = parseInt(new_y,10);
-        new_mine.isMine = false;
+        new_mine.canExplode = false;
 
         var chance=Math.floor(Math.random()*100);
         if(chance > 50) {
-          new_mine.isMine = true;
+          new_mine.canExplode = true;
         }
 
         new_mine.numTouching = 1; // TODO: Actually calculate this
@@ -180,6 +180,25 @@ DNode(function (client, conn) {
       if (!err) {
         dbmine.state = mine.state;
         dbmine.save(function (err) {
+          //handle explosions.
+          if(!err) {
+            if(mine.canExplode) {
+              console.log("Handling Explosion!!!");
+              var lower_left = [mine.loc[0]-2,mine.loc[1]-2];
+              var upper_right = [mine.loc[1]+2, mine.loc[1]+2];
+              MineModel.find({'loc': {'$within': {'$box': [lower_left,upper_right]}}},[],{}, function(err, docs) {
+                docs.forEach(function(d) {
+                  if(d.canExplode) {
+                    d.state = 2;
+                    d.save(function(err) { });
+                    underscore.each(fieldPlayers[1], function(trigger,client) {
+                        trigger(d.toObject());
+                    });
+                  }
+                });
+              });
+            }
+          }
         });
       }
     });

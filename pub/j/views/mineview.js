@@ -9,7 +9,7 @@ App.Views.MineView = Backbone.View.extend({
   },
   triggerMine: function() {
     if(this.model.get('state') === 0) {
-      if(this.model.get('isMine') === true) {
+      if(this.model.get('canExplode') === true) {
         // set exploded state
         this.model.set({state: 2});
         //todo - explode radius of mines
