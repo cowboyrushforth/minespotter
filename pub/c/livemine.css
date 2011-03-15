@@ -25,6 +25,18 @@ div#sidebar {
     text-align: center;
 }
 
+div#x_coord {
+    position: absolute;
+    bottom: 2px;
+    left: 10px;
+}
+
+div#y_coord {
+    position: absolute;
+    bottom: 2px;
+    left: 85px;
+}
+
 div.mine {
     width: 66px;
     height: 66px;
@@ -49,4 +61,6 @@ div.mine-state-2 {
 .blue {
     color: blue;
 }
+
+
 

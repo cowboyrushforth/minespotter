@@ -33,11 +33,15 @@ App.Views.MainView = Backbone.View.extend({
   },
   refreshBoard: function() {
 
-    //ie - cycle through minePool pieces and see if they should still be on screen
+    //todo - cycle through minePool pieces and see if they should still be on screen
     //or not, if they are not supposed to be on the screen, remove them
 
     App.minePool.x = this.x;
     App.minePool.y = this.y;
+
+    if(App.sidebarView !== null) {
+        App.sidebarView.updateCoordIndicator(this.x, this.y);
+    }
 
     //move board to appropriate place
     $('#board').css('left', ((this.x*72)*-1));

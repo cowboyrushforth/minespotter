@@ -6,13 +6,15 @@ App.Views.SidebarView = Backbone.View.extend({
   events: {
   },
   render: function() {
-    $(this.el).html("LiveMine");
+    $('#title').html("LiveWire v0.0.1");
+    $('#name').html("Welcome, player!");
     this.resize();
   },
   resize: function() {
      $(this.el).css('height', $(window).height());
   },
-  updateCoordIndicator: function() {
-
+  updateCoordIndicator: function(x,y) {
+    $('#x_coord').html('x: '+x);
+    $('#y_coord').html('y: '+y);
   }
 });
