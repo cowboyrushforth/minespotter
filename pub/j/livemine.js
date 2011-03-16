@@ -23,7 +23,7 @@ var App = {
 //we need to replace the, then re-render
 App.mineHandler = function(new_mine) {
       if(App.debug === true) {
-        console.log("Received New Mine!")
+        dlog("Received New Mine!")
       }
       var old = App.minePool.get(new_mine._id);
       old.set(new_mine);
@@ -48,6 +48,6 @@ $(function() {
     Backbone.history.start();
   });
   // setup resize handler
-  $(window).resize(App.resize);
+//  $(window).resize(App.resize);
 });
 

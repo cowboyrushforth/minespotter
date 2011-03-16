@@ -17,7 +17,7 @@ App.Controllers.Main = Backbone.Controller.extend({
   displaySpecificLocation: function(x,y) {
     this.saveLocation('!x/'+x+'/y/'+y);
 
-    console.log('displaySpecificLocation, x: '+x+' y: '+y);
+    dlog('displaySpecificLocation, x: '+x+' y: '+y);
 
     if(App.sidebarView === null) {
       App.sidebarView = new App.Views.SidebarView({});

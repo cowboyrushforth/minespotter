@@ -12,7 +12,7 @@ App.Models.Mine = Backbone.Model.extend({
         case 'create':
           break;
         case 'update':
-          console.log('Syncing Mine, meth: '+method);
+          dlog('Syncing Mine, meth: '+method);
           App.remote.saveMine(model.attributes);
           cbs.success(this);
           break;

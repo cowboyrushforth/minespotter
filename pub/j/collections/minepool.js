@@ -2,7 +2,7 @@ App.Collections.MinePool = Backbone.Collection.extend({
   model: App.Models.Mine,
   collectionName: 'mines',
   sync:  function(method, model, cbs) {
-    console.log('Syncing MinePool, meth: '+method);
+    dlog('Syncing MinePool, meth: '+method);
     switch(method) {
       case 'read':
         // get remote mines
