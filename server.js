@@ -154,6 +154,8 @@ DNode(function (client, conn) {
                   var updated_mines = [];
                   var e_iteration = 1;
 
+                  if(underscore.size(docs)) {
+
                   docs.forEach(function(d) {
                     // we found a mine nearby that needs exploding.
                     d.state = 2;
@@ -171,7 +173,7 @@ DNode(function (client, conn) {
                           //requesting client already has mine fresh, 
                           //but for others add it.
                           if(conn.id != client) {
-                            updates.push(mine.toObject());
+                            updates.push(dbmine.toObject());
                           }
                           trigger(updates);
                         });
@@ -179,6 +181,15 @@ DNode(function (client, conn) {
                       e_iteration += 1;
                     });
                   });
+                  //no surrounding mines to explode, just pass
+                  //the single to other clients.
+                  } else {
+                    underscore.each(fieldPlayers[1], function(trigger,client) {
+                      if(conn.id != client) {
+                        trigger([dbmine.toObject()]);
+                      }
+                    });
+                  }
                 }
               });
 
