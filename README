@@ -20,6 +20,9 @@ To setup development environment you will want to npm install the following pack
 -mongoose (tested v1.1.4)
 -socket.io (tested v0.6.16)
 -underscore (tested v1.1.4)
+-node.js itself tested with v0.4.2
+
+You will also need mongodb running where your running node.
 
 Only tested so far in safari and a little in chrome.
 
