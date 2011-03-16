@@ -59,15 +59,32 @@ this.trimPiecesWeHave = function(docs,needed_pieces_list,cb) {
       iteration += 1;
     });
   }
+
 };
 
+
+// insertNewPieces does asynchronous inserting
+// into mongo, and then calls back at the end.
+// it should not be called with empty needed_pieces
 this.insertNewPieces = function(MineModel,needed_pieces, docs, cb) {
 
-  console.log('creating '+needed_pieces.length+' needed_pieces');
+  console.log("\tCreating "+needed_pieces.length+' needed pieces');
+
+  var self = this;
+
+  //boardPieces will eventually contain all board pieces, old or new.
+  //used to calculate number of touching mines ultimately.
+  var gamePieces = {};
+  docs.forEach(function(d) {
+        gamePieces[d.loc[0]+':'+d.loc[1]] = d;
+  });
+
 
   var iteration = 1;
 
+  //turn all needed pieces into gamePieces
   needed_pieces.forEach(function(piece) {
+
 
     var new_y = piece.split(':');
     var new_x = new_y[1];
@@ -77,29 +94,70 @@ this.insertNewPieces = function(MineModel,needed_pieces, docs, cb) {
     new_mine.loc[1]  = parseInt(new_x,10);
     new_mine.loc[0]  = parseInt(new_y,10);
     new_mine.canExplode = false;
+    new_mine.numTouching = 0;
 
     // 29% chance we are explodable.
     var chance=Math.floor(Math.random()*100);
     if(chance < 29) {
       new_mine.canExplode = true;
+      //we are a mine
+      //we need to increment surrounding mines
+      //if one of the pieces doesnt exist yet, thats ok we only care about the ones that do
+      //to exist, a mine might have been just created (maybe not saved)
+      //or might be in the database
+      self.surroundingMines(new_mine).forEach(function(spiece) {
+            if(gamePieces[spiece]) {
+                gamePieces[spiece].numTouching += 1;
+            }
+      });
+    } else {
+       //we are not a mine
+       //we need to know how many mines that will be touching it
+       //we can look at the 8 pieces surrounding it, and come up with a number.
+       //if not all 8 pieces exist, we only care about the ones that do exist yet.
+       //to exist, a mine might have been just created (maybe not saved)
+       //or might be in the database
+        self.surroundingMines(new_mine).forEach(function(spiece) {
+            if(gamePieces[spiece]) {
+                if(gamePieces[spiece].canExplode) {
+                    new_mine.numTouching += 1;
+                }
+            }
+        });
     }
 
-    new_mine.numTouching = 0;
+    if(gamePieces[piece] === undefined) {
+        gamePieces[piece] = new_mine;
+    }
+
     new_mine.state  = 0;
     new_mine.save(function(err) {
       if(err !== null) {
         console.log("------ohnos db error!-------");
         console.log(err);
         console.log(new_mine.toObject());
-      } else {
-        docs.push(new_mine);
       }
       if(iteration == needed_pieces.length) {
-        cb(docs);
+        cb(gamePieces);
       }
       iteration += 1;
     });
   });
 };
 
+this.surroundingMines = function(mine) {
+    surrounds = [];
+    //top
+    surrounds.push((mine.loc[0]+1)+':'+(mine.loc[1]-1));
+    surrounds.push((mine.loc[0]+1)+':'+mine.loc[1]);
+    surrounds.push((mine.loc[0]+1)+':'+(mine.loc[1]+1));
+    //middle
+    surrounds.push(mine.loc[0]+':'+(mine.loc[1]-1));
+    surrounds.push(mine.loc[0]+':'+(mine.loc[1]+1));
+    //bottom
+    surrounds.push((mine.loc[0]-1)+':'+(mine.loc[1]-1));
+    surrounds.push((mine.loc[0]-1)+':'+mine.loc[1]);
+    surrounds.push((mine.loc[0]-1)+':'+(mine.loc[1]+1));
+    return surrounds;
+}
 

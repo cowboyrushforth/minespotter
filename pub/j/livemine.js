@@ -39,14 +39,14 @@ App.resize = function() {
 
 $(function() {
   // fire DNode Up
-  DNode().connect(function(remote) {
+  DNode().connect({reconnect: 2000}, function(remote) {
     App.remote = remote;
     App.screenWidth  = parseInt($(window).width(),10);
     App.screenHeight = parseInt($(window).height(),10);
     App.mainController = new App.Controllers.Main();
     // fire backbone up
     Backbone.history.start();
-  }, {reconnect: 2000});
+  });
   // setup resize handler
   $(window).resize(App.resize);
 });
