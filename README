@@ -13,6 +13,16 @@ Big props to the wordsquared guys as their product inspired this!
 
 Hope to launch this on a public domain for the world to play with some day.
 
+To setup development environment you will want to npm install the following packages:
+-connect (tested v1.0.6)
+-dnode (tested v0.5.7)
+-hashish (tested v0.0.2)
+-mongoose (tested v1.1.4)
+-socket.io (tested v0.6.16)
+-underscore (tested v1.1.4)
+
+Only tested so far in safari and a little in chrome.
+
 Todo:
 -scores
 -facebook login
@@ -23,6 +33,9 @@ Todo:
 -optimize board more
     -clean up more aggresively after scrolling
 -asthetics
+-handle bonus mines better -
+    -ie when i click on a '4' mine, it should clear
+    -more area, then scroll the screen a little
 
 
 LICENSE: 
