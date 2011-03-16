@@ -5,17 +5,19 @@ App.Models.Mine = Backbone.Model.extend({
   //  2: Stepped On and Exploded
   //  9: Greyed Out from nearby expansion or explosion
   idAttribute: '_id',
-  sync:  function(method, model, success, error) {
-    console.log('Syncing Mine, meth: '+method);
+  sync:  function(method, model, cbs) {
       switch(method) {
         case 'read':
           break;
         case 'create':
           break;
         case 'update':
+          console.log('Syncing Mine, meth: '+method);
           App.remote.saveMine(model.attributes);
+          cbs.success(this);
           break;
         case 'delete':
+          cbs.success(this);
           break;
       }
   }

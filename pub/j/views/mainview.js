@@ -32,22 +32,36 @@ App.Views.MainView = Backbone.View.extend({
           App.mainController.displaySpecificLocation(x,y);
       }
     });
+
+    //every 4 seconds clean stale pieces.
+    //seems to work better than after refreshBoard, 
+    //but should probably put it in there once we optimize
+    //(ie - not overcall during a resize)
+    setInterval(function() {
+     var min_x = App.minePool.x-2;
+     var max_x = parseInt(App.screenWidth/App.pieceSize,10) + (App.minePool.x+2);
+     var min_y = App.minePool.y-2;
+     var max_y = parseInt(App.screenHeight/App.pieceSize,10) + (App.minePool.y + 2);
+     App.minePool.each(function(m) {
+      if(m.attributes.loc[1] < min_x || m.attributes.loc[1] > max_x || m.attributes.loc[0] > max_y || m.attributes.loc[1] < min_y) {
+        m.view.remove();
+        m.destroy();
+      }
+    });
+    },4000);
   },
   refreshBoard: function() {
 
-    //todo - cycle through minePool pieces and see if they should still be on screen
-    //or not, if they are not supposed to be on the screen, remove them
-
-    App.minePool.x = this.x;
-    App.minePool.y = this.y;
+    App.minePool.x = parseInt(this.x,10);
+    App.minePool.y = parseInt(this.y,10);
 
     if(App.sidebarView !== null) {
         App.sidebarView.updateCoordIndicator(this.x, this.y);
     }
 
     //move board to appropriate place
-    $('#board').css('left', ((this.x*72)*-1));
-    $('#board').css('top', ((this.y*72)*-1));
+    $('#board').css('left', ((this.x*App.pieceSize)*-1));
+    $('#board').css('top', ((this.y*App.pieceSize)*-1));
 
     App.minePool.fetch();
 
@@ -57,6 +71,7 @@ App.Views.MainView = Backbone.View.extend({
       App.remote.subscribeField(1, App.mineHandler);
       App.subscribedFields.push(1);
     }
+
   },
   resize: function() {
     if(App.sidebarView !== null) {

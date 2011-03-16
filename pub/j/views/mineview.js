@@ -1,7 +1,9 @@
 App.Views.MineView = Backbone.View.extend({
   initialize: function() {
     var self = this;
+    this.model.view = self;
     this.model.bind('change', function(mv) { self.render(); });
+    this.model.bind('destroy', function(mv) { self.remove(); });
   },
   events: {
     'dblclick'   : 'triggerMine',
