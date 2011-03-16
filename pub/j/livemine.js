@@ -48,6 +48,6 @@ $(function() {
     Backbone.history.start();
   });
   // setup resize handler
-//  $(window).resize(App.resize);
+  $(window).resize(App.resize);
 });
 
