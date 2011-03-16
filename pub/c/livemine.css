@@ -1,7 +1,7 @@
 body {
     overflow: hidden;
     background-color: #ccc;
-    font-family: helvetica, arial, tahoma, verdana;
+  font-family: lucida grande;
 }
 
 div#board {
@@ -60,6 +60,30 @@ div.mine-state-2 {
 
 .blue {
     color: blue;
+}
+
+div#instructions {
+  font-size: 0.8em;
+  margin-top: 90px;
+  margin-bottom: 20px;
+  font-weight: bolder;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+div#instructions h4 {
+  font-size: 1.5em;
+}
+
+div#connection_status {
+
+  bottom: 40px;
+  position: absolute;
+  left: 20px;
+  font-size: 1.5em;
+  font-weight: lighter;
+  font-style: italic;
+
 }
 
 

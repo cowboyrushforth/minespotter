@@ -126,47 +126,75 @@ DNode(function (client, conn) {
 
     // find mine we need to update
     MineModel.findById(mine._id, function (err, dbmine) {
+
       if (!err && dbmine) {
+        //we found mine.
         // set new state
         dbmine.state = mine.state;
         // save mine
         dbmine.save(function (err) {
-          if(!err && mine.canExplode) {
-            // handle explosions.
-            console.log("Handling Explosion!!!");
-            // scan a 2d box around area for other mines.
-            // we could limit this search to only finding mines
-            // i just wonder if we need to do anything to the near pieces
-            // we probably need to change them to another state too.
-            var lower_left = [mine.loc[0]-1,mine.loc[1]-1];
-            var upper_right = [mine.loc[0]+1, mine.loc[1]+1];
-            MineModel.find({'_id' : {'$ne' : mine._id },
-                           'canExplode' : 1,
-                           'state' : 0,
-                           'loc': {'$within': {'$box': [lower_left,upper_right]}}
-            },[],{}, function(err, docs) {
-              if(!err) {
-                docs.forEach(function(d) {
-                  // we found a mine nearby that needs exploding.
-                  d.state = 2;
-                  d.save(function(err) { });
-                  // notify other people in this field
-                  underscore.each(fieldPlayers[1], function(trigger,client) {
-                    trigger(d.toObject());
+          if(!err) {
+            if(mine.canExplode) {
+              // handle explosions.
+
+              console.log("Handling Explosion!!!");
+
+              // scan a 2d box around area for other mines.
+              var lower_left = [mine.loc[0]-1,mine.loc[1]-1];
+              var upper_right = [mine.loc[0]+1, mine.loc[1]+1];
+              MineModel.find({'_id' : {'$ne' : mine._id },
+                             'canExplode' : 1,
+                             'state' : 0,
+                             'loc': {'$within': {'$box': [lower_left,upper_right]}}
+              },[],{}, function(err, docs) {
+                if(!err) {
+
+                  console.log("found: "+underscore.size(docs)+" mines to explode!");
+
+                  var updated_mines = [];
+                  var e_iteration = 1;
+
+                  docs.forEach(function(d) {
+                    // we found a mine nearby that needs exploding.
+                    d.state = 2;
+                    d.save(function(err) {
+                      if(!err) {
+                        updated_mines.push(d);
+                      }
+                      if(e_iteration == underscore.size(docs)) {
+                        // notify other people in this field
+                        underscore.each(fieldPlayers[1], function(trigger,client) {
+                          //map it appropriate backbone form.
+                          var updates = underscore.map(updated_mines, function(um) {
+                            return um.toObject();
+                          });
+                          //requesting client already has mine fresh, 
+                          //but for others add it.
+                          if(conn.id != client) {
+                            updates.push(mine.toObject());
+                          }
+                          trigger(updates);
+                        });
+                      }
+                      e_iteration += 1;
+                    });
                   });
-                });
-              }
-            });
-          }
-        });
-        underscore.each(fieldPlayers[1], function(trigger,client) {
-          if(conn.id != client) {
-            trigger(mine);
+                }
+              });
+
+            } else {
+              // notify players in the field about mine update.
+              // except ourselves, because we sent the update.
+              underscore.each(fieldPlayers[1], function(trigger,client) {
+                if(conn.id != client) {
+                  trigger([mine]);
+                }
+              });
+            }
           }
         });
       }
     });
-
   };
 
   this.noop = function(poon) {

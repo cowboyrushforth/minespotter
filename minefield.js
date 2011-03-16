@@ -126,22 +126,16 @@ this.insertNewPieces = function(MineModel,needed_pieces, docs, cb) {
         });
     }
 
-    if(gamePieces[piece] === undefined) {
-        gamePieces[piece] = new_mine;
-    }
-
+    // all mines start at state 0
     new_mine.state  = 0;
-    new_mine.save(function(err) {
-      if(err !== null) {
-        console.log("------ohnos db error!-------");
-        console.log(err);
-        console.log(new_mine.toObject());
-      }
-      if(iteration == needed_pieces.length) {
-        cb(gamePieces);
-      }
-      iteration += 1;
-    });
+
+    if(gamePieces[piece] === undefined) {
+      gamePieces[piece] = new_mine;
+    }
+    if(iteration == needed_pieces.length) {
+      self.saveGamePieces(gamePieces,cb);
+    }
+    iteration += 1;
   });
 };
 
@@ -159,5 +153,24 @@ this.surroundingMines = function(mine) {
     surrounds.push((mine.loc[0]-1)+':'+mine.loc[1]);
     surrounds.push((mine.loc[0]-1)+':'+(mine.loc[1]+1));
     return surrounds;
-}
+};
+
+this.saveGamePieces = function(gamePieces, cb) {
+  var iteration = 1;
+
+  underscore.each(gamePieces, function(mine) {
+    mine.save(function(err) {
+      if(err !== null) {
+        console.log("------ohnos db error!-------");
+        console.log(err);
+        console.log(mine.toObject());
+      }
+      if(iteration == underscore.size(gamePieces)) {
+        cb(gamePieces);
+      }
+      iteration += 1;
+    });
+  });
+};
+
 

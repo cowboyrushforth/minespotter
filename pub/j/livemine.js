@@ -21,12 +21,14 @@ var App = {
 
 //this receives new mines for the current field
 //we need to replace the, then re-render
-App.mineHandler = function(new_mine) {
+App.mineHandler = function(new_mines) {
       if(App.debug === true) {
-        dlog("Received New Mine!")
+        dlog("Received "+_.size(new_mines)+" New Mine(s)!");
       }
-      var old = App.minePool.get(new_mine._id);
-      old.set(new_mine);
+      _.each(new_mines, function(m) {
+        var old = App.minePool.get(m._id);
+        old.set(m);
+      });
 };
 
 App.resize = function() {
