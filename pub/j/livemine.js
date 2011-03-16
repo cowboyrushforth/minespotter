@@ -32,7 +32,7 @@ App.mineHandler = function(new_mine) {
 App.resize = function() {
         App.screenWidth  = parseInt($(window).width(),10);
         App.screenHeight = parseInt($(window).height(),10);
-        App.mainView.resize()
+        App.mainView.resize();
         App.mainView.refreshBoard();
 }
 

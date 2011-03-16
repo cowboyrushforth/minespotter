@@ -1,4 +1,10 @@
 App.Controllers.Main = Backbone.Controller.extend({
+  initialize: function() {
+    setInterval(function() {
+      App.mainController.serverCheck();
+    },10000);
+    this.serverCheck();
+  },
   routes: {
     '' :  'displayRandomLocation',
     '!x/:x/y/:y': 'displaySpecificLocation'
@@ -14,7 +20,7 @@ App.Controllers.Main = Backbone.Controller.extend({
     console.log('displaySpecificLocation, x: '+x+' y: '+y);
 
     if(App.sidebarView === null) {
-       App.sidebarView = new App.Views.SidebarView({});
+      App.sidebarView = new App.Views.SidebarView({});
     }
 
     if(App.mainView === null) {
@@ -24,5 +30,18 @@ App.Controllers.Main = Backbone.Controller.extend({
     App.mainView.x = x;
     App.mainView.y = y;
     App.mainView.refreshBoard();
+  },
+  serverCheck: function() {
+    try {
+      App.remote.noop(function(res) {
+        if(res == 'OK') {
+          App.sidebarView.connectionOk();
+        } else {
+          App.sidebarView.connectionNotOK();
+        }
+      });
+    } catch(e) {
+      App.sidebarView.connectionNotOk();
+    }
   }
 });

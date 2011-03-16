@@ -6,7 +6,7 @@ App.Views.SidebarView = Backbone.View.extend({
   events: {
   },
   render: function() {
-    $('#title').html("LiveWire v0.0.1");
+    $('#title').html("LiveMine v0.0.1");
     $('#name').html("Welcome, player!");
     this.resize();
   },
@@ -16,5 +16,11 @@ App.Views.SidebarView = Backbone.View.extend({
   updateCoordIndicator: function(x,y) {
     $('#x_coord').html('x: '+x);
     $('#y_coord').html('y: '+y);
+  },
+  connectionOk: function() {
+    $('#connection_status').html("Connected!");
+  },
+  connectionNotOk: function() {
+    $('#connection_status').html("Not Connected!");
   }
 });

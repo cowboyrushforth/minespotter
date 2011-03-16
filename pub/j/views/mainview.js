@@ -24,6 +24,8 @@ App.Views.MainView = Backbone.View.extend({
     });
 
     $(this.el).draggable({
+      scroll: false,
+      zIndex: 18,
       stop: function(ev,ui) {
           var x = parseInt((parseInt($(ui.helper).css('left'),10)/App.pieceSize),10)*-1;
           var y = parseInt((parseInt($(ui.helper).css('top'),10)/App.pieceSize),10)*-1;
