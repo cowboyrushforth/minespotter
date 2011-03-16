@@ -43,7 +43,7 @@ App.Views.MainView = Backbone.View.extend({
      var min_y = App.minePool.y-2;
      var max_y = parseInt(App.screenHeight/App.pieceSize,10) + (App.minePool.y + 2);
      App.minePool.each(function(m) {
-      if(m.attributes.loc[1] < min_x || m.attributes.loc[1] > max_x || m.attributes.loc[0] > max_y || m.attributes.loc[1] < min_y) {
+      if((m.get('loc')[1] < min_x) || (m.get('loc')[1] > max_x) || (m.get('loc')[0] > max_y) || (m.get('loc')[0] < min_y)) {
         m.view.remove();
         m.destroy();
       }
