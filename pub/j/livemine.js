@@ -15,7 +15,7 @@ var App = {
   remote: null,
   debug: true,
   pieceSize: 72,
-  subscribedFields: []
+  subscribedFields: {}
 };
 
 

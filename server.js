@@ -86,7 +86,7 @@ DNode(function (client, conn) {
               cb(underscore.map(preparedDocs, function(d) {
                 return d.toObject();
               }));
-            })
+            });
           } else {
             console.log("About to CB (1)");
             cb(underscore.map(docs, function(d) {
@@ -99,44 +99,59 @@ DNode(function (client, conn) {
   };
 
   this.subscribeField = function(field, trigger) {
+    console.log("client: "+conn.id+" subscribing to: "+field);
 
     if(fieldPlayers[field] === undefined) { fieldPlayers[field] = {}; }
-    if(playerFields[conn.id] === undefined) { playerFields[conn.id] = []; }
 
-    fieldPlayers[field][conn.id] = trigger;
-    playerFields[conn.id].push(field);
-
-    //todo remove from other fields now
-    //ie - only one field subscription at a time allowed
-    //unless your half in one field and half in another.
-    //so i guess we have to allow up to 4 subscriptions
-    //or possibly (probably the better thing to do) is
-    //calculate which fields we should be subscribing to
-    //on the server side..
-
-    conn.on('end', function() {
-      underscore.each(playerFields[conn.id], function(p) {
-        delete fieldPlayers[p][conn.id];
+    if(playerFields[conn.id] === undefined) {
+      playerFields[conn.id] = [];
+      conn.on('end', function() {
+        underscore.each(playerFields[conn.id], function(p) {
+          delete fieldPlayers[p][conn.id];
+        });
+        delete playerFields[conn.id];
       });
-      delete playerFields[conn.id];
-    });
+    }
+
+    if(!underscore.include(playerFields[conn.id], field)) {
+      playerFields[conn.id].push(field);
+      fieldPlayers[field][conn.id] = trigger;
+    }
   };
 
+  this.unsubscribeField = function(field) {
+    console.log("client: "+conn.id+" unsubscribing to: "+field);
+    if(fieldPlayers[field]) {
+      delete fieldPlayers[field][conn.id];
+    }
+    if(playerFields[conn.id]) {
+      delete playerFields[conn.id][field];
+    }
+  };
+
+  // Major Todo - dry / clean this up!!!
   this.saveMine = function(mine) {
 
     // find mine we need to update
     MineModel.findById(mine._id, function (err, dbmine) {
 
+      //we found mine.
       if (!err && dbmine) {
-        //we found mine.
+
+        //what minefield are we in.
+        var field_x = parseInt((dbmine.loc[1]+50)/50,10);
+        var field_y = parseInt((dbmine.loc[0]+30)/30,10);
+        var field_key = field_y+':'+field_x;
+
         // set new state
         dbmine.state = mine.state;
+
         // save mine
         dbmine.save(function (err) {
           if(!err) {
             if(mine.canExplode) {
-              // handle explosions.
 
+              // handle explosions.
               console.log("Handling Explosion!!!");
 
               // scan a 2d box around area for other mines.
@@ -147,8 +162,8 @@ DNode(function (client, conn) {
                              'state' : 0,
                              'loc': {'$within': {'$box': [lower_left,upper_right]}}
               },[],{}, function(err, docs) {
-                if(!err) {
 
+                if(!err) {
                   console.log("found: "+underscore.size(docs)+" mines to explode!");
 
                   var updated_mines = [];
@@ -165,7 +180,7 @@ DNode(function (client, conn) {
                       }
                       if(e_iteration == underscore.size(docs)) {
                         // notify other people in this field
-                        underscore.each(fieldPlayers[1], function(trigger,client) {
+                        underscore.each(fieldPlayers[field_key], function(trigger,client) {
                           //map it appropriate backbone form.
                           var updates = underscore.map(updated_mines, function(um) {
                             return um.toObject();
@@ -184,7 +199,7 @@ DNode(function (client, conn) {
                   //no surrounding mines to explode, just pass
                   //the single to other clients.
                   } else {
-                    underscore.each(fieldPlayers[1], function(trigger,client) {
+                    underscore.each(fieldPlayers[field_key], function(trigger,client) {
                       if(conn.id != client) {
                         trigger([dbmine.toObject()]);
                       }
@@ -196,7 +211,7 @@ DNode(function (client, conn) {
             } else {
               // notify players in the field about mine update.
               // except ourselves, because we sent the update.
-              underscore.each(fieldPlayers[1], function(trigger,client) {
+              underscore.each(fieldPlayers[field_key], function(trigger,client) {
                 if(conn.id != client) {
                   trigger([mine]);
                 }
@@ -210,7 +225,7 @@ DNode(function (client, conn) {
 
   this.noop = function(poon) {
     poon("OK");
-  }
+  };
 
 }).listen(server);
 

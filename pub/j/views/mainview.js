@@ -55,6 +55,7 @@ App.Views.MainView = Backbone.View.extend({
     App.minePool.x = parseInt(this.x,10);
     App.minePool.y = parseInt(this.y,10);
 
+
     if(App.sidebarView !== null) {
         App.sidebarView.updateCoordIndicator(this.x, this.y);
     }
@@ -65,17 +66,47 @@ App.Views.MainView = Backbone.View.extend({
 
     App.minePool.fetch();
 
-    //todo - dynamically calculate which fields we are subscribed too.
-    //unsubscribe from ones we dont want
-    if(_.indexOf(App.subscribedFields, 1) == -1) {
-      App.remote.subscribeField(1, App.mineHandler);
-      App.subscribedFields.push(1);
-    }
+    //what minefield are we in.
+    var field_x = parseInt((App.minePool.x+50)/50,10);
+    var field_y = parseInt((App.minePool.y+30)/30,10);
+    var mfields = [];
+    //top fields
+    mfields.push( (field_y+1)+':'+(field_x-1) );
+    mfields.push( (field_y+1)+':'+(field_x)   );
+    mfields.push( (field_y+1)+':'+(field_x+1) );
+    //middle fields
+    mfields.push( (field_y)+':'+(field_x-1) );
+    mfields.push( (field_y)+':'+(field_x) );
+    mfields.push( (field_y)+':'+(field_x+1));
+    //bottom fields
+    mfields.push( (field_y-1)+':'+(field_x-1) );
+    mfields.push( (field_y-1)+':'+(field_x)   );
+    mfields.push( (field_y-1)+':'+(field_x+1) );
+
+    //and unsubscribe from old fields
+    _.each(App.subscribedFields, function(val,k) {
+      //check to see if its in mfields, if not, unsubscribe
+      if(!_.include(mfields, k)) {
+        console.log("Unsubscribing to now irrelevant field: "+k);
+        App.remote.unsubscribeField(k);
+        delete App.subscribedFields[k];
+      }
+    });
+
+    //make sure to subscribe to new minefields
+    _.each(mfields, function(field_key) {
+      if(App.subscribedFields[field_key] === undefined) {
+        console.log("Subscribing to mineField: "+field_key);
+        App.remote.subscribeField(field_key, App.mineHandler);
+        App.subscribedFields[field_key] = 1;
+      }
+    });
+
 
   },
   resize: function() {
     if(App.sidebarView !== null) {
-      App.sidebarView.resize();   
-    } 
-  } 
+      App.sidebarView.resize();
+    }
+  }
 });
