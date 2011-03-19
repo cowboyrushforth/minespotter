@@ -34,7 +34,7 @@ Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$within = function (va
 
 // Create Server
 var server = Connect(
-    connect.static(__dirname+'/pub')
+    Connect.static(__dirname+'/pub')
 );
 
 // setup Mine Model
