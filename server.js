@@ -8,6 +8,7 @@ var underscore = require('underscore');
 var Path       = require('path');
 var MineField  = require(Path.join(process.cwd(), 'minefield.js'));
 var dbdsn      = process.env.DUOSTACK_DB_MONGODB || 'mongodb://localhost/minespotter_dev';
+var sys        = require('sys');
 
 
 // Static Setup
@@ -43,12 +44,15 @@ var MineSchema = new Schema({
   numTouching  : {type: Number },
   loc          : {type: Array }
 });
+Mongoose.model('Mine', MineSchema);
+var MineModel = Mongoose.model('Mine');
 
+//MineModel.collection.ensureIndex();
+//unction(fieldOrSpec, unique, callback)
+//collection.createIndex([['all'], ['_id', 1], ['number', 1], ['rndm', 1], ['msg', 1]]
 //this seems to not be working properly, so for now run in mongo console!!!!
 //MineSchema.index({loc: "2d"}, { min: -5000000, max: 5000000, unique: true});
 
-Mongoose.model('Mine', MineSchema);
-var MineModel = Mongoose.model('Mine');
 
 DNode(function (client, conn) {
 
