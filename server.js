@@ -1,4 +1,4 @@
-/* Live Mine 0.0.1 */
+/* MineSpotter 0.0.1 */
 
 // Libs
 var Connect    = require('connect');
@@ -7,6 +7,7 @@ var Mongoose   = require('mongoose');
 var underscore = require('underscore');
 var Path       = require('path');
 var MineField  = require(Path.join(process.cwd(), 'minefield.js'));
+var dbdsn      = process.env.DUOSTACK_DB_MONGODB || 'mongodb://localhost/minespotter_dev';
 
 
 // Static Setup
@@ -16,7 +17,7 @@ var fieldPlayers = {};
 var playerFields = {};
 
 // Connect to Mongo
-Mongoose.connect('mongodb://localhost/livemine_dev');
+Mongoose.connect(dbdsn);
 
 // Fix $near with array.
 Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$near = function (val) {

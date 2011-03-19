@@ -6,7 +6,7 @@ App.Views.SidebarView = Backbone.View.extend({
   events: {
   },
   render: function() {
-    $('#title').html("LiveMine v0.0.1");
+    $('#title').html("MineSpotter v0.0.1");
     $('#name').html("Welcome, player!");
     this.resize();
   },

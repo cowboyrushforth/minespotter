@@ -1,4 +1,4 @@
-// LiveMine v0.0.1
+// MineSpotter v0.0.1
 
 // Main Application Object
 var App = {

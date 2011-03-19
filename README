@@ -1,7 +1,7 @@
-LiveMine v0.0.1
+MineSpotter v0.0.1
 -------------------------------------------------------------------------------
 
-LiveMine is an experimental node.js minesweeper clone.
+MineSpotter is an experimental node.js minesweeper clone.
 
 It is based on node.js, connect, dnode+socket.io, backbone.js, and jquery.
 
