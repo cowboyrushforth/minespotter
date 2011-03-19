@@ -1,0 +1,90 @@
+body {
+    overflow: hidden;
+    background-color: #ccc;
+  font-family: lucida grande;
+}
+
+div#board {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 15;
+}
+
+div#sidebar {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 400px;
+    display: block;
+    width: 175px;
+    background-color: black;
+    opacity: 0.7;
+    z-index: 25;
+    color: white;
+    text-align: center;
+}
+
+div#x_coord {
+    position: absolute;
+    bottom: 2px;
+    left: 10px;
+}
+
+div#y_coord {
+    position: absolute;
+    bottom: 2px;
+    left: 85px;
+}
+
+div.mine {
+    width: 66px;
+    height: 66px;
+    text-align: center;
+    font-size: 3.5em;
+    font-weight: bolder;
+    position: absolute;
+    cursor: pointer;
+    border: 3px outset #888;
+    background-color: #ccc;
+    z-index: 16;
+}
+
+div.pressed {
+    border: 3px inset #888;
+}
+
+div.mine-state-2 {
+    background-image: url('/i/bomb.png');
+}
+
+.blue {
+    color: blue;
+}
+
+div#instructions {
+  font-size: 0.8em;
+  margin-top: 90px;
+  margin-bottom: 20px;
+  font-weight: bolder;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+div#instructions h4 {
+  font-size: 1.5em;
+}
+
+div#connection_status {
+
+  bottom: 40px;
+  position: absolute;
+  left: 20px;
+  font-size: 1.5em;
+  font-weight: lighter;
+  font-style: italic;
+
+}
+
+
+
