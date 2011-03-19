@@ -7,7 +7,8 @@ var Mongoose   = require('mongoose');
 var underscore = require('underscore');
 var Path       = require('path');
 var MineField  = require(Path.join(process.cwd(), 'minefield.js'));
-var dbdsn      = process.env.DUOSTACK_DB_MONGODB || 'mongodb://localhost/minespotter_dev';
+//var dbdsn      = process.env.DUOSTACK_DB_MONGODB || 'mongodb://localhost/minespotter_dev';
+var dbdsn      = "mongodb://spotman:minespotter22@flame.mongohq.com:27047/minespotter";
 var sys        = require('sys');
 
 
@@ -48,44 +49,8 @@ var MineSchema = new Schema({
 Mongoose.model('Mine', MineSchema);
 var MineModel = Mongoose.model('Mine');
 
-//unction(fieldOrSpec, unique, callback)
-//collection.createIndex([['all'], ['_id', 1], ['number', 1], ['rndm', 1], ['msg', 1]]
-//this seems to not be working properly, so for now run in mongo console!!!!
+//this is broken in nodejs for now.
 //MineSchema.index({loc: "2d"}, { min: -5000000, max: 5000000, unique: true});
-
-//console.log("xx");
-//console.log( sys.inspect( Mongoose.connections[0].db) );
-
-//DbCommand.createCreateIndexCommand = function(db, collectionName, fieldOrSpec, unique) {
-//};
-
-//console.log("WHEEEE");
-//return;
-/*
-  var finalUnique = unique == null ? false : unique;
-  var fieldHash = {};
-  var finalFieldOrSpec = fieldOrSpec.constructor == String ? [[fieldOrSpec, 1]] : fieldOrSpec;
-  var indexes = [];
-
-  // Get all the fields
-  finalFieldOrSpec.forEach(function(indexArray) {
-    var indexArrayFinal = indexArray;
-    if(indexArrayFinal.length == 1) indexArrayFinal[1] = 1;
-    fieldHash[indexArrayFinal[0]] = indexArrayFinal[1];
-    indexes.push(indexArrayFinal[0] + "_" + indexArrayFinal[1]);
-  });
-  // Generate the index name
-  var indexName = indexes.join("_");
-  // Build the selector
-  var selector = {'ns':(db.databaseName + "." + collectionName), 'unique':finalUnique, 'key':fieldHash, 'name':indexName};
-  // Create the insert command for the index and return the document
-  return new InsertCommand(db, db.databaseName + "." + DbCommand.SYSTEM_INDEX_COLLECTION, false).add(selector);
-};
-*/
-
-//MineModel.collection.ensureIndex();
-
-//process.exit();
 
 
 DNode(function (client, conn) {
@@ -269,5 +234,5 @@ DNode(function (client, conn) {
 }).listen(server);
 
 // Attach to port 3000
-// //8946
+// //8946?
 server.listen(3000);
