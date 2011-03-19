@@ -1,0 +1,24 @@
+{
+  "name": "minespotter",
+  "description": "a node.js infinite minesweeper clone",
+  "version": "0.0.1",
+  "homepage": "http://minespotter.com",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cowboyrushforth/minespotter.git"
+  },
+  "author": "Scott Rushforth <scott@spotman.net> (http://minespotter.com)",
+  "directories": {
+    "lib": "."
+  },
+  "engines": {
+    "node": ">= 0.4.0"
+  },
+  "dependencies": {
+    "connect"  : "1.0.6",
+    "socket.io": "0.6.16",
+    "dnode"    : "0.5.7",
+    "mongoose" : "1.1.4",
+    "underscore" : ">= 1.1.4"
+  }
+}
