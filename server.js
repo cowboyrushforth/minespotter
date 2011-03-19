@@ -35,7 +35,7 @@ Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$within = function (va
 // Create Server
 var server = Connect.createServer(
   // js lint can suck it, have no choice here.
-  Connect.static(__dirname + '/pub')
+  Connect.staticProvider(__dirname + '/pub')
 );
 
 // setup Mine Model
