@@ -41,7 +41,7 @@ App.resize = function() {
 
 $(function() {
   // fire DNode Up
-  DNode().connect({port: 80, reconnect: 2000}, function(remote) {
+  DNode().connect({port: 9980, reconnect: 2000}, function(remote) {
     App.remote = remote;
     App.screenWidth  = parseInt($(window).width(),10);
     App.screenHeight = parseInt($(window).height(),10);
