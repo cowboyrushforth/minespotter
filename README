@@ -27,14 +27,21 @@ You will also need mongodb running where your running node.
 Only tested so far in safari and a little in chrome.
 
 Todo:
--stress testing on real hardware
 -scores/leaderboard
+-mine features -
+    -when i click on a 0 mine
+      it should expand all the non-mines 
+      out to the nearest mine
+    -when at edge of map, auto move and
+      animate in some fashion to make the
+      game more automatic.
+-some sort of notification that a player
+  is in the same field as you.
+-stress testing on real hardware
 -facebook login
 -minimap
 -more asthetics?
--handle bonus mines better -
-    -ie when i click on a '4' mine, it should clear
-    -more area, then scroll the screen a little
+-ideas?
 
 
 LICENSE: 
