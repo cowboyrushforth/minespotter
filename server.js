@@ -1,5 +1,14 @@
 /* MineSpotter 0.0.1 */
 
+// debug?
+debug      = process.env.DEBUG || false;
+// Setup Logger
+log = function(msg, important) {
+  if(important || debug) {
+    console.log(msg);
+  }
+};
+
 // Libs
 var Connect    = require('connect');
 var DNode      = require('dnode');
@@ -7,8 +16,7 @@ var Mongoose   = require('mongoose');
 var underscore = require('underscore');
 var Path       = require('path');
 var MineField  = require(Path.join(process.cwd(), 'minefield.js'));
-//var dbdsn      = process.env.DUOSTACK_DB_MONGODB || 'mongodb://localhost/minespotter_dev';
-var dbdsn      = "mongodb://spotman:minespotter22@flame.mongohq.com:27047/minespotter";
+var dbdsn      = process.env.DB_DSN || 'mongodb://localhost/minespotter_dev';
 var sys        = require('sys');
 
 
@@ -18,9 +26,9 @@ var ObjectId = Schema.ObjectId;
 var fieldPlayers = {};
 var playerFields = {};
 
+
 // Connect to Mongo
 Mongoose.connect(dbdsn);
-console.log(dbdsn);
 
 // Fix $near with array.
 Mongoose.SchemaTypes.Array.prototype.$conditionalHandlers.$near = function (val) {
@@ -48,9 +56,10 @@ var MineSchema = new Schema({
 Mongoose.model('Mine', MineSchema);
 var MineModel = Mongoose.model('Mine');
 
-//this is broken in nodejs for now.
+// NOTE: RUN THIS MANUALLY!!!
+// this is broken in nodejs for now, need to write patch for mongo driver 
+// to properly support options besides unique.
 //MineSchema.index({loc: "2d"}, { min: -5000000, max: 5000000, unique: true});
-
 
 DNode(function (client, conn) {
 
@@ -72,26 +81,26 @@ DNode(function (client, conn) {
       MineModel.find({'loc': {'$within': {'$box': [field.lower_left,field.upper_right]}}},[],{}, function(err, docs) {
 
         if(err !== null) {
-          console.log("error!");
-          console.log(err);
+          log('db-error:', true);
+          log(err, true);
           return;
         }
 
-        console.log("\tFound "+docs.length+" pieces");
+        log("\tFound "+docs.length+" pieces");
 
         MineField.trimPiecesWeHave(docs, needed_pieces_list, function(needed_pieces) {
 
           if(needed_pieces.length) {
             // now insert all needed pieces into mongo that we didnt have
-            console.log("\tNeed to create "+needed_pieces.length+" pieces");
+            log("\tNeed to create "+needed_pieces.length+" pieces");
             MineField.insertNewPieces(MineModel, needed_pieces, docs, function(preparedDocs) {
-              console.log("About to CB (2)");
+              log("About to CB (2)");
               cb(underscore.map(preparedDocs, function(d) {
                 return d.toObject();
               }));
             });
           } else {
-            console.log("About to CB (1)");
+            log("About to CB (1)");
             cb(underscore.map(docs, function(d) {
               return d.toObject();
             }));
@@ -102,7 +111,7 @@ DNode(function (client, conn) {
   };
 
   this.subscribeField = function(field, trigger) {
-    console.log("client: "+conn.id+" subscribing to: "+field);
+    log("client: "+conn.id+" subscribing to: "+field);
 
     if(fieldPlayers[field] === undefined) { fieldPlayers[field] = {}; }
 
@@ -123,7 +132,7 @@ DNode(function (client, conn) {
   };
 
   this.unsubscribeField = function(field) {
-    console.log("client: "+conn.id+" unsubscribing to: "+field);
+    log("client: "+conn.id+" unsubscribing to: "+field);
     if(fieldPlayers[field]) {
       delete fieldPlayers[field][conn.id];
     }
@@ -155,7 +164,7 @@ DNode(function (client, conn) {
             if(mine.canExplode) {
 
               // handle explosions.
-              console.log("Handling Explosion!!!");
+              log("Handling Explosion!!!");
 
               // scan a 2d box around area for other mines.
               var lower_left = [mine.loc[0]-1,mine.loc[1]-1];
@@ -167,7 +176,7 @@ DNode(function (client, conn) {
               },[],{}, function(err, docs) {
 
                 if(!err) {
-                  console.log("found: "+underscore.size(docs)+" mines to explode!");
+                  log("found: "+underscore.size(docs)+" mines to explode!");
 
                   var updated_mines = [];
                   var e_iteration = 1;

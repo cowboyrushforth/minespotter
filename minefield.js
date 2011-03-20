@@ -20,10 +20,10 @@ this.setup = function(x,y,screenWidth,screenHeight) {
   field.lower_left = [field.y-2,field.x-1];
   field.upper_right = [Math.ceil(field.y+field.needed_pieces_h)+1,Math.ceil(field.x+field.needed_pieces_w)+2];
 
-  console.log('minefield setup called for x: '+field.x+' y: '+field.y+' sw: '+field.screenWidth+
+  log('minefield setup called for x: '+field.x+' y: '+field.y+' sw: '+field.screenWidth+
               ' sh: '+field.screenHeight+' needed pieces: '+field.needed_pieces+
               ' needed_pieces_w: '+field.needed_pieces_w+' needed_pieces_h: '+field.needed_pieces_h);
-  console.log('lower_left: '+field.lower_left+' upper_right: '+field.upper_right);
+  log('lower_left: '+field.lower_left+' upper_right: '+field.upper_right);
 
   return field;
 };
@@ -39,7 +39,7 @@ this.calculateNeededPieces = function(lower_left,upper_right,cb) {
       point[0] = point[0]+1;
     }
   }
-  console.log("\tNeeded pieces: "+needed_pieces_list.length);
+  log("\tNeeded pieces: "+needed_pieces_list.length);
   cb(needed_pieces_list);
 };
 
@@ -68,7 +68,7 @@ this.trimPiecesWeHave = function(docs,needed_pieces_list,cb) {
 // it should not be called with empty needed_pieces
 this.insertNewPieces = function(MineModel,needed_pieces, docs, cb) {
 
-  console.log("\tCreating "+needed_pieces.length+' needed pieces');
+  log("\tCreating "+needed_pieces.length+' needed pieces');
 
   var self = this;
 
@@ -161,9 +161,9 @@ this.saveGamePieces = function(gamePieces, cb) {
   underscore.each(gamePieces, function(mine) {
     mine.save(function(err) {
       if(err !== null) {
-        console.log("------ohnos db error!-------");
-        console.log(err);
-        console.log(mine.toObject());
+        log("------ohnos db error!-------",true);
+        log(err, true);
+        log(mine.toObject(),true);
       }
       if(iteration == underscore.size(gamePieces)) {
         cb(gamePieces);
