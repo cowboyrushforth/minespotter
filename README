@@ -3,6 +3,8 @@ MineSpotter v0.0.1
 
 MineSpotter is an experimental node.js minesweeper clone.
 
+Demo: http://play.minespotter.com
+
 It is based on node.js, connect, dnode+socket.io, backbone.js, and jquery.
 
 It is in extreme early stages of development, but progress is happening rapidly.
@@ -10,8 +12,6 @@ It is in extreme early stages of development, but progress is happening rapidly.
 This is my virgin step into the world of node, so is very much an educational project :)
 
 Big props to the wordsquared guys as their product inspired this!  
-
-Hope to launch this on a public domain for the world to play with some day.
 
 To setup development environment you will want to npm install the following packages:
 -connect (tested v1.0.6)
