@@ -24,7 +24,13 @@ To setup development environment you will want to npm install the following pack
 
 You will also need mongodb running where your running node.
 
-Only tested so far in safari and a little in chrome.
+Create this index manually in mongodb:
+
+db.mines.ensureIndex({loc: "2d"}, { min: -5000000, max: 5000000, unique: true});
+
+Mongodb native and mongoose both don't support passing options besides unique afaik.
+
+Only tested so far in safari and a little in chrome. Would love to hear reports about other browsers.
 
 Todo:
 -scores/leaderboard
